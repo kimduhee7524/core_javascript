@@ -20,7 +20,7 @@ ES6 이전에는 두 환경의 구분이 현재처럼 명확하지 않았다.
 
 * VariableEnvironment와 LexicalEnvironment가 같은 EnvironmentRecord를 공유하지만, 실행 도중 LexicalEnvironment만 변경될 수 있다.
     
-* LexicalEnvironment는 `eval`과 `with` 같은 문맥에서 동적으로 변할 수 있지만, VariableEnvironment는 변하지 않는다.  
+* LexicalEnvironment는 `eval`과 `with` 같은 문맥에서 동적으로 변할 수 있지만, VariableEnvironment는 변하지 않는다.
     
 
 ES6에서 `let/const`가 도입되면서 두 환경의 역할이 더 명확해졌다.
@@ -162,7 +162,7 @@ const c = 3;
 
 ---
 
-**2️⃣ 실행 중** `let`, `const`의 블록 스코프 관리
+**2️⃣** `let`, `const`의 블록 스코프 관리
 
 ```javascript
 function example() {
@@ -186,8 +186,6 @@ example();
     
 * `let b`와 `let d`는 **LexicalEnvironment에 저장됨** → 블록 스코프를 따름.
     
-
-➡ **LexicalEnvironment가 따로 없다면,** `let d`도 함수 스코프를 따라야 하지만, `let`은 블록 스코프를 유지해야 하기 때문에 별도로 관리되는 것.
 
 ---
 
