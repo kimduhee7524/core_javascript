@@ -54,77 +54,15 @@ console.log(a) // --------------[8]
     * **스코프 체인**을 따라 외부 환경을 참조 → **클로저와 관련**
         
 
-🔍 **EnvironmentRecord** 가 호이스팅(Hoisting)과 관련 있는 이유
-
-**JS 엔진은** 코드를 실행하기 전에 **모든 변수와 함수 선언을** `EnvironmentRecord`에 먼저 등록한다.  
-이 때문에 **변수와 함수가 선언되기 전에도 접근할 수 있는 현상**, 즉 **호이스팅(Hoisting)** 이 발생.
-
-✅ **예제 1: var 변수 호이스팅**
-
-```jsx
-console.log(a); // undefined (호이스팅됨)
-var a = 10;
-console.log(a); // 10
-```
-
-1. `var a;` 선언이 **EnvironmentRecord에 먼저 저장됨** (초기값: `undefined`)
-    
-2. `console.log(a);` 실행 → `undefined` 출력
-    
-3. `a = 10;` 실행 → 값이 업데이트됨
-    
-
-➡️ `var` 변수는 **초기화되지 않은 상태에서 Hoisting** 되므로 `undefined` 가 출력됨.
-
----
-
-✅ **예제 2:** **함수선언문의 호이스팅**
-
-```jsx
-hello(); // "Hello World!"
-
-function hello() {
-  console.log("Hello World!");
-}
-```
-
-1. `hello` 함수 선언이 **EnvironmentRecord에 저장됨**
-    
-2. 함수 전체가 **호이스팅됨** (즉, 미리 사용할 수 있음!)
-    
-3. `hello();` 실행 → `"Hello World!"` 출력
-    
-
-➡️ **함수 선언은 전체가 호이스팅되므로, 선언 전에 호출 가능**.
-
----
-
-✅ **예제 3: let / const 는 왜 호이스팅이 다르게 동작할까?**
-
-```jsx
-console.log(b); // ❌ ReferenceError
-let b = 10;
-console.log(b);
-```
-
-1. `let b;` 선언이 **EnvironmentRecord에 저장됨**
-    
-2. 하지만 초기화(`undefined` 할당)가 되지 않음!
-    
-3. 실행 전에 접근하면 **ReferenceError 발생**
-    
-
-➡️ `let` / `const`는 호이스팅은 되지만 "TDZ(Temporal Dead Zone)"에 의해 초기화 전에는 접근할 수 없음!
+**VariableEnvironment** 와 **LexicalEnvironment에 대한 자세한 내용은 이전 포스팅참고**👇[https://ddoit.hashnode.dev/variableenvironment-lexicalenvironment](https://ddoit.hashnode.dev/variableenvironment-lexicalenvironment)
 
 ---
 
 ### 🔍 **OuterEnvironmentReference** 란?
 
-**OuterEnvironmentReference (외부 환경 참조)** 는 **스코프 체인**을 따라 변수를 찾는 역할
+실행 컨텍스트가 생성될 때, 함수가 선언된 위치(렉시컬 스코프)를 기준으로 `OuterEnvironmentReference`가 설정된다.
 
-자바스크립트에서 변수를 찾을 때는 **스코프 체인(Scope Chain)** 을 따라간다.  
-쉽게 말해, 현재 실행 컨텍스트에서 변수를 찾고, 없으면 상위 컨텍스트로 이동한다.  
-이때, 상위 컨텍스트가 **무엇인지 연결해주는 것이** `OuterEnvironmentReference` 이다.
+자바스크립트에서 변수를 찾을 때는 **스코프 체인(Scope Chain)** 을 따라간다.
 
 1. **현재 실행 컨텍스트의 EnvironmentRecord**에서 변수를 찾음.
     
@@ -163,11 +101,18 @@ outer(); // 10
 ## 📌클로저란?
 
 **클로저(Closure)** 는 **"외부 함수의 변수(스코프)를 참조하는 내부 함수"**  
-➡️ 그리고 **외부 함수가 종료된 후에도, 내부 함수가 그 변수를 계속 사용할 수 있는 상태**  
-➡️ **왜냐하면** 함수가 **참조형 데이터**이기 때문  
-➡️ **"함수가 종료된 후에도 실행 컨텍스트를 유지하는 능력"이 클로저의 핵심!**
+➡️ **외부 함수가 종료된 후에도, 내부 함수가 그 변수를 계속 사용할 수 있는 상태**
 
-✅ **예제 1: 클로저가 없는 경우 (일반적인 스코프 체인)**
+1️⃣ `foo()` 실행 → 실행 컨텍스트 생성  
+2️⃣ `x = 10` 메모리에 저장  
+3️⃣ `console.log(x)` 실행 (출력: `10`)  
+4️⃣ `foo()` 실행 종료 → **실행 컨텍스트가 콜 스택에서 제거됨!**  
+5️⃣ `x = 10`도 더 이상 참조되지 않으므로, 가비지 컬렉션(GC)이 메모리에서 삭제함!
+
+✔ **즉, 실행 컨텍스트가 사라지면, 일반적으로 함수 내부의 변수들도 삭제됨.**  
+✔ **하지만! 클로저가 있으면, 변수가 삭제되지 않고 유지된다!**
+
+✅ **예제 1: 클로저가 없는 경우**
 
 ```jsx
 function outer() {
@@ -178,22 +123,61 @@ outer();
 console.log(count); // ❌ ReferenceError
 ```
 
-1. `outer()` 실행 → `count`가 `outer()`의 실행 컨텍스트에 저장됨.
+1. `outer()` 실행 → 실행 컨텍스트 생성
     
-2. `outer()`가 끝나면 실행 컨텍스트가 사라지면서 `count`도 삭제됨.
+2. `count = 0` 메모리에 저장
     
-3. `console.log(count);` 실행 시 변수 `count`를 찾을 수 없음 → `ReferenceError` 발생.
+3. `outer()` 실행 종료 → **실행 컨텍스트가 콜 스택에서 제거됨!**
+    
+4. `count = 0`도 더 이상 참조되지 않으므로, 가비지 컬렉션(GC)이 메모리에서 삭제함!
+    
+5. `console.log(count);` 실행 시 변수 `count`를 찾을 수 없음 → `ReferenceError` 발생.
     
 
-➡️ **즉, 스코프 체인만으로는 함수가 종료된 후 변수를 유지할 수 없다!**
+➡️ **즉, 함수가 종료되면** 함수 내부의 변수들도 삭제된다.
 
 ---
+
+✅ **예제 2: 클로저를 사용한 경우**
+
+```jsx
+function outer() {
+  let count = 0;
+
+  return function inner() {
+    count++; // 외부 변수 count를 계속 사용할 수 있음
+    console.log(count);
+  };
+}
+
+const counter = outer(); // outer() 실행 후 inner() 반환
+counter(); // 1
+counter(); // 2
+counter(); // 3
+```
+
+1. `outer()` 실행 → 실행 컨텍스트 생성
+    
+    * `count = 0` 메모리에 저장
+        
+    * inner() 함수가 선언후 반환됨.
+        
+2. outer() 실행 종료 → 실행 컨텍스트 제거
+    
+    * 일반적으로 실행 컨텍스트가 제거되면 `count = 0`도 삭제되어야 하지만 inner() 함수가 스코프체인을 따라 `count`를 참조하고 있기 때문에, **GC(Garbage Collection)가** x를 메모리에서 **제거하지 않음!**
+        
+3. `counter();` 실행 → `count`가 여전히 메모리에 남아 있어서, `count++`가 실행되면서 값을 유지함.
+    
+
+➡️ 즉, 실행 컨텍스트는 사라졌지만, 클로저가 변수를 참조하고 있기 때문에`count`는 메모리에 남아 있음!  
+➡️ **클로저는 실행 컨텍스트가 콜스택에서 사라진 후에도 특정 변수를 "힙 메모리"에 유지하는 개념이다!**  
+➡️**실행 컨텍스트 자체는 사라지지만, 클로저가 참조하는 변수는 메모리에 남아 있다.**
 
 ✅ **예제 2: 클로저가 안 되는 경우 (값이 복사됨)**
 
 ```jsx
 function outer() {
-    let count = 0; // 외부 변수
+    let count = 0;
 
     return count; // ❌ 기본형(숫자)을 반환 (클로저 X)
 }
@@ -213,46 +197,15 @@ console.log(counter); // 1 ❌ (값이 변하지 않음!)
 * 그래서 `counter++` 해도, 원래 `count`에는 영향을 주지 않음!
     
 
-➡️ **기본형 데이터를 반환하면, 값이 복사될 뿐 클로저가 되지 않음!**
+➡️ **기본형 데이터를 반환하면, 값이 복사될 뿐 클로저가 되지 않음!**  
+➡️ 클로저를 만들려면 함수(참조형 데이터)를 반환해야 한다!
 
 ---
 
-✅ **예제 2: 클로저를 사용한 경우**
+### 🔍 **클로저가 왜 필요해?**
 
-```jsx
-function outer() {
-  let count = 0; // 실행 컨텍스트에 저장됨
-
-  return function inner() {
-    count++; // 외부 변수 count를 계속 사용할 수 있음
-    console.log(count);
-  };
-}
-
-const counter = outer(); // outer() 실행 후 inner() 반환
-counter(); // 1
-counter(); // 2
-counter(); // 3
-```
-
-1. `outer()` 실행 → 실행 컨텍스트 생성 (`a = 10` 저장).
-    
-2. `inner()` 함수가 반환되면서, `outer()`의 실행 컨텍스트가 원래는 사라져야 하지만, **inner()가** `count` **를 참조하고 있어서 GC(Garbage Collection)가 제거하지 않음!**
-    
-3. `counter();` 실행 시마다 `count++`가 실행되면서 값을 유지함.
-    
-
-➡️ **클로저 덕분에** `outer()`의 실행 컨텍스트가 유지되어 `count`**에 접근할 수 있다!**
-
-➡️ **즉, 클로저 덕분에 실행 컨텍스트가 사라지지 않아 변수를 유지할 수 있다!**
-
-➡️ 스코프 체인은 변수를 찾는 기본적인 규칙이라면, 클로저는 사라질 실행 컨텍스트를 유지하여 변수를 계속 참조할 수 있도록 하는 기능
-
-🔍 **클로저가 왜 중요해?**
-
-**보통 함수가 끝나면 변수도 사라지는데, 클로저는 변수를 유지할 수 있다!**  
-**클로저를 활용하면 변수를 숨기고 특정 함수에만 접근 권한을 주어 캡슐화를 할 수 있기 때문입니다.**  
-즉, **클로저를 사용하면 변수는 반환된 함수 내에서만 접근이 가능하며, 외부에서는 직접 접근할 수 없습니다**
+**클로저를 활용하면 변수를 숨기고 특정 함수에만 접근 권한을 주어 캡슐화를 할 수 있기 때문이다.**  
+따라서 **클로저를 사용하면 변수는 반환된 함수 내에서만 접근이 가능하며, 외부에서는 직접 접근할 수 없다**
 
 ```jsx
 // 사용자의 장바구니를 관리하는 함수
