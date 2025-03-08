@@ -9,14 +9,43 @@ cover: https://cdn.hashnode.com/res/hashnode/image/upload/v1741090852253/f32e11e
 
 ---
 
-자바스크립트에서 객체 지향 프로그래밍(OOP)을 이해하려면 **생성자 함수, 인스턴스, 프로토타입, 상속**에 대한 이해가 필요하다  
-이번 포스팅에서는 **프로토타입과 상속이 어떻게 동작하는지** 정리하였다.
+자바스크립트에서 **객체 지향 프로그래밍(OOP)**을 이해하려면 **생성자 함수, 인스턴스, 프로토타입, 상속** 개념이 필수적이다.  
+이번 포스팅에서는 **프로토타입과 상속이 어떻게 동작하는지** 정리해보았다.
 
-### **1\. 생성자 함수란?**
+## 1️⃣ 프로토타입이 필요한 이유
 
-생성자 함수는 new 키워드와 함께 사용하여 새로운 객체(인스턴스)를 만든다.
+자바스크립트에서 객체를 생성할 때, **공통된 메서드(함수)를 모든 객체가 개별적으로 가지면 비효율적**이다.  
+예를 들어, 다음과 같은 경우를 생각해보자.
 
-✅ **생성자 함수 예제**
+### ❌ 개별 객체마다 중복된 메서드 생성
+
+```javascript
+function User(name, age) {
+  this.name = name;
+  this.age = age;
+  this.sayHello = function() { // ⛔ 메서드가 객체마다 개별적으로 생성됨
+    return `Hello, I'm ${this.name}`;
+  };
+}
+
+const user1 = new User("철수", 25);
+const user2 = new User("영희", 30);
+
+console.log(user1.sayHello()); // Hello, I'm 철수
+console.log(user2.sayHello()); // Hello, I'm 영희
+```
+
+✔ 위 코드에서는 `sayHello()` 메서드가 `user1`, `user2` 각각의 객체에 독립적으로 생성된다.  
+✔ 객체가 많아질수록 **메모리 낭비가 발생**한다.
+
+✅ **해결 방법** → **프로토타입을 사용하여 메서드를 공유**
+
+---
+
+## **2️⃣ 생성자 함수란?**
+
+✔ 생성자 함수는 `new` 키워드와 함께 사용하여 새로운 객체(인스턴스)를 만든다.  
+✔ 객체를 만들기 위한 템플릿(설계도) 역할을 한다.
 
 ```javascript
 function User(name, age) {
@@ -28,217 +57,360 @@ const user1 = new User("철수", 25);
 console.log(user1); // User { name: '철수', age: 25 }
 ```
 
-✔️ `User` 함수는 새로운 객체를 만들기 위한 **생성자 역할**을 함.  
-✔️ `user1`은 `User` 생성자 함수에서 만들어진 **인스턴스**임.
+✔ `User` 함수는 **새로운 객체를 만들기 위한 생성자 역할**을 한다.  
+✔ `user1`은 `User` 생성자 함수에서 만들어진 **인스턴스(객체)**이다.
 
-### **2\. 인스턴스란?**
+---
 
-인스턴스는 **생성자 함수 또는 클래스로부터 만들어진 실제 데이터가 있는 객체**를 의미한다.
+## **3️⃣ 인스턴스란?**
+
+✔ **인스턴스**는 생성자 함수 또는 클래스로부터 만들어진 **실제 데이터가 있는 객체**를 의미한다.  
+✔ 모든 인스턴스는 **\[\[Prototype\]\] (또는** `__proto__`) 속성을 가진다.
 
 | 구분 | 설명 | 예제 |
 | --- | --- | --- |
 | **생성자 함수** | 객체를 만들기 위한 템플릿(설계도) | `function User(name, age) { ... }` |
 | **인스턴스** | 생성자 함수로부터 만들어진 실제 객체 | `const user1 = new User("철수", 25);` |
 
-✔️ 생성자 함수나 클래스로 만든 **인스턴스는 자동으로 프로토타입을 상속받는다.**  
-✔️ 즉, 모든 인스턴스는 `[[Prototype]]`(또는 `__proto__`) 속성을 가진다.
-
-### **3\. 프로토타입(Prototype)이란?**
-
-객체가 상속받는 속성과 메서드를 정의하는 객체이다.  
-모든 객체는 자신의 프로토타입을 가지고 있으며, 이를 통해 다른 객체의 속성과 메서드를 상속받아 사용할 수 있습니다. 이를 통해 코드의 재사용성과 유지보수성을 높일 수 있다  
-즉, 자바스크립트에서 **모든 객체가 공통으로 속성과 메서드를 공유할 수 있는 구조**이다.
-
-📌 **프로토타입의 핵심 개념**
-
-* **모든 생성자 함수**는 `prototype` 속성을 가진다.
-    
-* **모든 인스턴스 객체**는 `__proto__`를 가지고 있으며, 이는 해당 생성자의 `prototype`을 가리킨다.
-    
-* 속성이나 메서드를 찾을 때, **자기 자신 → 프로토타입 체인**을 따라 상위 객체에서 찾는다.
-    
-
-✔️ **즉, 프로토타입은 자바스크립트에서 객체 간 상속을 담당하는 핵심 메커니즘이다.** 🚀
-
-### 4\. 프로토타입과 상속
-
-클래스 기반 언어에서는 "클래스를 기반으로 인스턴스를 생성"하지만, 자바스크립트는 "객체가 직접 다른 객체를 상속"하는 방식(프로토타입 상속)을 사용한다!  
-**즉, 자바스크립트에서 "상속"은 "프로토타입"을 통해 이루어진다.**
-
-✅ **클래스 기반 언어(Java, C++, Python)**
-
-* 객체를 만들려면 먼저 **"클래스"**를 정의해야 한다.
-    
-* **클래스는 설계도(템플릿) 역할**을 하며, 이를 기반으로 객체(인스턴스)를 생성한다.
-    
-* **상속은 "클래스 간"에서 이루어지며,** `extends` 같은 키워드를 사용한다.
-    
-
-📌 **예제 (Java)**
-
-```java
-class Animal {
-    void speak() {
-        System.out.println("동물이 소리를 냅니다.");
-    }
+```javascript
+function User(name, age) {
+  this.name = name;
+  this.age = age;
 }
 
-class Dog extends Animal { // Animal 클래스를 상속
-    void bark() {
-        System.out.println("멍멍!");
-    }
-}
+const user1 = new User("철수", 25);
 
-public class Main {
-    public static void main(String[] args) {
-        Dog dog = new Dog();
-        dog.speak(); // 부모 클래스의 메서드 사용 가능
-        dog.bark();  // 자식 클래스의 메서드
-    }
-}
+console.log(user1.__proto__ === User.prototype); // true ✅
+console.log(User.prototype.__proto__ === Object.prototype); // true ✅
 ```
 
-✔️ 클래스를 정의하고(`class`), 이를 바탕으로 객체를 만든다.  
-✔️ 상속도 클래스 간에서 이루어지며 (`extends` 사용), **부모 클래스의 기능을 자식 클래스가 물려받는다.**
+✔ 즉, 생성자 함수로 만든 **모든 인스턴스는 자동으로 프로토타입을 상속받는다.**
 
 ---
 
-✅ **프로토타입 기반 언어 (JavaScript)**
+## **4️⃣ 프로토타입(Prototype)이란?**
 
-* 자바스크립트에서는 **"클래스 없이도" 객체를 만들 수 있다.**
-    
-* 객체가 **직접** 다른 객체를 상속할 수 있다.
-    
-* **새로운 객체는 기존 객체(프로토타입)의 속성과 메서드를 "상속"받는다.**
-    
-
-1️⃣ `Object.create()`를 사용한 상속
-
-📌 **기존 객체를 직접 프로토타입으로 설정하는 가장 단순한 방법**
+✔ **자바스크립트는 기존 객체를 직접 복사하는 것이 아니라, "참조(링크)"하는 방식**을 사용한다.  
+✔ 이때, 기존 객체를 **"프로토타입(prototype)"**이라고 부른다.  
+✔ **모든 객체는 프로토타입을 가지고 있으며**, 프로토타입을 통해 다른 객체의 속성(변수, 함수 등)을 사용할 수 있다.
 
 ```javascript
-const animal = {
-  speak() {
-    console.log("동물이 소리를 냅니다.");
+function User(name, age) {
+  this.name = name;
+  this.age = age;
+}
+
+// ✅ 프로토타입에 메서드 정의 (모든 인스턴스가 공유)
+User.prototype.sayHello = function() {
+  return `Hello, I'm ${this.name}`;
+};
+
+const user1 = new User("철수", 25);
+const user2 = new User("영희", 30);
+
+console.log(user1.sayHello()); // Hello, I'm 철수
+console.log(user2.sayHello()); // Hello, I'm 영희
+console.log(user1.sayHello === user2.sayHello); // true ✅ (같은 함수 참조)
+```
+
+✔ `sayHello()`는 프로토타입에 정의되어 **모든 인스턴스가 공유**한다.  
+✔ 즉, **불필요한 메모리 사용을 줄일 수 있다**.
+
+---
+
+## **5️⃣ 프로토타입 체인(Prototype Chain)**
+
+✔ **객체는 단순히** `__proto__`를 통해 프로토타입을 참조하는 것뿐만 아니라, 연속적인 프로토타입 체인을 갖는다.  
+✔ **즉, 하나의 객체가 부모 객체의 프로토타입을 참조하고, 그 부모 객체가 다시 다른 객체의 프로토타입을 참조하는 구조**다.
+
+![프로토타입 체인](https://cloud.githubusercontent.com/assets/2888775/15841811/f14b233e-2c8e-11e6-988d-6ea081b4c984.png align="left")
+
+```javascript
+const obj = {}; // 빈 객체 생성
+console.log(obj.__proto__); // Object.prototype을 참조하고 있음
+console.log(Object.prototype.__proto__); // null (최상위 객체)
+```
+
+✔ `obj` 객체는 `Object.prototype`을 프로토타입으로 참조한다.  
+✔ `Object.prototype`에는 `toString`, `hasOwnProperty` 등의 공통 메서드가 정의되어 있고, 그로 인해 모든 객체에서 해당 속성들을 사용할 수 있다.
+
+**🔗 프로토타입 체인 예제**
+
+```javascript
+// 생성자 함수 (이름을 받는 Parent 객체 생성)
+function Parent(name) {
+  this.name = name;
+}
+
+// Parent의 프로토타입에 메서드 추가
+Parent.prototype.getName = function() {
+  return this.name;
+};
+
+// Parent 생성자로 객체 생성
+var p = new Parent("myName");
+
+console.log(p.name);       // "myName"  (자신의 속성)
+console.log(p.getName());  // "myName"  (프로토타입에서 가져옴)
+console.log(p.__proto__ === Parent.prototype); // true ✅
+```
+
+✔ `p` 객체는 `getName()` 메서드를 직접 가지고 있지 않지만, 프로토타입 체인을 따라 `Parent.prototype.getName()`을 찾고 실행한다.
+
+---
+
+## 6️⃣ **프로토타입 체인을 활용한 상속 (버전별 발전 과정)**
+
+자바스크립트에서 **프로토타입 체인을 활용한 상속 구현 방법은 시대에 따라 발전**했다.
+
+| 버전 | 상속 구현 방법 | 설명 |
+| --- | --- | --- |
+| **ES5 이전** | `new` + `prototype` | 생성자 함수와 `new`를 사용해 프로토타입 체인을 직접 설정 |
+| **ES5** | `Object.create()` | `Object.create(부모.prototype)`으로 간단하게 연결 가능 |
+| **ES6 이후** | `class` + `extends` | `class` 문법을 사용해 `extends`로 쉽게 상속 가능 |
+
+---
+
+## **📌 1) ES5 이전 (생성자 함수 기반 상속)**
+
+ES5 이전에는 `Object.create()` 없이 생성자 함수와 `prototype`을 직접 조작해서 상속을 구현해야 했다.
+
+### **✅ 1. 값(속성) 상속:** `call()`을 이용한 부모 속성 복사
+
+자식 객체가 부모 객체의 속성을 물려받을 수 있도록 `call()`을 사용해야 한다.
+
+```jsx
+function Parent(name) {
+  this.name = name;
+}
+
+function Child(name, age) {
+  Parent.call(this, name); // ✅ 부모 생성자의 속성을 개별 인스턴스로 복사
+  this.age = age;
+}
+
+const c1 = new Child("John", 25);
+console.log(c1.name); // "John" ✅ (부모의 속성을 상속받음)
+console.log(c1.age);  // 25 ✅
+```
+
+✔ [`Parent.call`](http://Parent.call)`(this, name);`을 실행하면 `Parent` 생성자가 `Child`의 `this`에 적용됨.
+
+✔ **각 인스턴스가** `name` 속성을 가지지만, `prototype`의 메서드는 상속받지 않음.
+
+❌ 즉, **부모의 메서드(**`Parent.prototype.getName()`)는 상속되지 않음.
+
+---
+
+### **✅ 2. 메서드(객체) 상속: 프로토타입을 이용한 상속**
+
+부모의 메서드를 상속받기 위해 `Child.prototype`을 `Parent`의 인스턴스로 설정해야 한다.
+
+```jsx
+function Parent(name) {
+  this.name = name;
+}
+
+Parent.prototype.getName = function () {
+  return this.name;
+};
+
+function Child(name, age) {
+  Parent.call(this, name); // 📌 부모 생성자 실행하여 속성 상속 (값 상속)
+  this.age = age;
+}
+
+Child.prototype = new Parent(); // ❌ 비효율적인 방식
+Child.prototype.constructor = Child; // constructor 복구
+
+const c1 = new Child("John", 25);
+const c2 = new Child("Alice", 30);
+
+console.log(c1.getName()); // "John" ✅
+console.log(c2.getName()); // "Alice" ✅
+```
+
+> `new` 키워드가 하는 일 (엔진 내부 과정)
+> 
+> * ### **📌** `Child.prototype = new Parent();` 실행 과정
+>     
+>     ```jsx
+>     var temp = {};                      // 1️⃣ 새로운 빈 객체 생성
+>     temp.__proto__ = Parent.prototype;  // 2️⃣ temp의 프로토타입을 Parent.prototype으로 설정
+>     Parent.call(temp);                  // 3️⃣ Parent 생성자 호출 (this = temp)
+>                                         //⚠️ name 인자가 없어서 temp.name = undefined;
+>     Child.prototype = temp;             // 4️⃣ 최종적으로 Child.prototype을 temp로 설정
+>     ```
+>     
+>     ✔ **이 과정에서** `Child.prototype`이 `Parent.prototype`을 상속받도록 연결됨.
+>     
+>     ✔ 하지만 [`Parent.call`](http://Parent.call)`(temp);`이 실행될 때 인자가 전달되지 않으므로 [**temp.name**](http://temp.name)**은** `undefined`가 됨.
+>     
+>     ---
+>     
+>     ### **📌** `const c1 = new Child("John", 25);` 실행 과정
+>     
+>     ```jsx
+>     var c1 = {};                      // 1️⃣ 새로운 빈 객체 생성
+>     c1.__proto__ = Child.prototype;   // 2️⃣ c1의 [[Prototype]]을 Child.prototype으로 설정
+>     Parent.call(c1, "John");          // 3️⃣ Parent 생성자 실행 (this = c1), c1.name = "John"
+>     c1.age = 25;                      // 4️⃣ Child 생성자의 나머지 코드 실행
+>     ```
+>     
+>     ✔ **이 과정에서** [`Parent.call`](http://Parent.call)`(this, name);`이 실행되어, 각 인스턴스(c1, c2)에 개별적인 속성이 추가됨.
+>     
+>     ✔ `c1.__proto__ = Child.prototype;`이므로, `c1.getName()`을 호출하면 **프로토타입 체인을 통해** `Parent.prototype.getName()`을 참조함.
+>     
+
+✔ **이제** `c1.getName()`을 실행하면 프로토타입 체인을 통해 `Parent.prototype.getName()`을 찾을 수 있음.
+
+❌ **하지만** `Child.prototype = new Parent();` 방식에는 문제가 있음!
+
+---
+
+## **📌 2.** `Child.prototype = new Parent();` 방식의 문제점
+
+### **❌ 불필요한 속성 생성**
+
+```jsx
+Child.prototype = new Parent();
+console.log(Child.prototype.name); // undefined ❌ (원래 없어야 하는 속성)
+```
+
+✔ `Child.prototype`에는 **부모의 메서드(**`getName()`)만 있어야 하는데, `name` 속성이 포함됨.
+
+✔ 즉, `Child.prototype`이 단순한 원형 객체가 아니라 **부모의 불필요한 속성을 가진 인스턴스가 되어버림.**
+
+---
+
+## **📌 3. 해결 방법 → 중간 객체(Temp) 사용**
+
+ES5 이전에는 `Object.create()`를 사용할 수 없었기 때문에,
+
+**부모의 생성자를 실행하지 않으면서** `prototype`을 상속하는 방법이 필요했다.
+
+이를 위해 **중간 객체(Temp)를 사용해서** `prototype`을 올바르게 연결했다.
+
+### **✅ ES5 이전의 올바른 방식**
+
+```jsx
+function Parent(name) {
+  this.name = name;
+}
+
+Parent.prototype.getName = function () {
+  return this.name;
+};
+
+function Child(name, age) {
+  Parent.call(this, name); // ✅ 부모 생성자 실행하여 속성 상속
+  this.age = age;
+}
+
+// ✅ ES5 이전의 올바른 프로토타입 상속 방식
+function Temp() {} // 중간 객체 생성
+Temp.prototype = Parent.prototype; // Parent의 프로토타입을 Temp에 연결
+Child.prototype = new Temp(); // Child.prototype을 Temp의 인스턴스로 변경
+Child.prototype.constructor = Child; // constructor 복구
+
+const c1 = new Child("John", 25);
+const c2 = new Child("Alice", 30);
+
+console.log(c1.getName()); // "John" 
+console.log(c2.getName()); // "Alice" 
+console.log(c1.__proto__ === Child.prototype); // true 
+console.log(Child.prototype.__proto__ === Parent.prototype); // true (프로토타입 체인 연결됨)
+console.log(Child.prototype.name); // undefined (불필요한 속성이 없음!)
+```
+
+✔ **이제** `Child.prototype`이 `Parent.prototype`을 올바르게 상속받았으며, 불필요한 속성이 없음.
+
+✔ **부모 생성자가 실행되지 않으면서, 메서드만 올바르게 상속됨!**
+
+과거에는 Object.create() 가 없었기 때문에, "대리(임시) 생성자"를 사용해서 프로토타입 체인을 연결했다. 이 방식은 **"Ghost(유령) 생성자" 패턴** 이라고도 불렸다.
+
+---
+
+## **📌 2. ES5 (Object.create 함수)**
+
+ES5부터는 `Object.create(프로토타입)`을 이용해서 **더 간단하게 프로토타입 체인을 만들 수 있다.**
+
+```javascript
+// 1️⃣ 부모 객체 생성
+const parent = {
+  sayHello: function() {
+    return "Hello from Parent!";
   }
 };
 
-// animal을 프로토타입으로 하는 새로운 객체 생성
-const dog = Object.create(animal);
-dog.bark = function() {
-  console.log("멍멍!");
-};
+// 2️⃣ Object.create()로 parent를 원형으로 하는 객체 생성
+const child = Object.create(parent);
+child.name = "John";
 
-dog.speak(); // "동물이 소리를 냅니다." (animal에서 상속)
-dog.bark();  // "멍멍!" (dog에서 정의)
-
-console.log(dog.__proto__ === animal); // true (dog가 animal을 상속)
+console.log(child.sayHello()); // "Hello from Parent!" (parent에서 상속됨)
+console.log(child.__proto__ === parent); // true
+console.log(parent.__proto__ === Object.prototype); // true (최종 원형)
 ```
 
-✔️ **가장 간단한 방식으로 상속을 구현할 수 있다.**  
-✔️ **객체를 직접 상속받아 사용할 수 있으며, 생성자 함수나 클래스가 필요 없다.**
-
-❌ **하지만 객체를 초기화하는 기능이 없어 속성을 동적으로 추가해야 한다.**  
-❌ **메서드를 추가할 때 프로토타입을 직접 수정해야 하므로 불편하다.**
-
-📌 **결론:** `Object.create()`는 **단순한 객체 상속을 구현할 때 유용하다.** 🚀
+✔ `Temp()` 없이도 **한 줄 코드로 부모의 메서드를 상속받을 수 있다.**  
+✔ **더 직관적이고 가독성이 뛰어남!**
 
 ---
 
-2️⃣ 생성자 함수 + prototype을 사용한 상속 (ES5 방식)
+## **📌 3. ES6 이후 (클래스** `class` 사용)
 
-📌 **생성자 함수를 사용하여 객체를 생성하고, 프로토타입을 직접 조작하는 방식**
-
-```javascript
-js복사편집function Animal() {}
-
-Animal.prototype.speak = function() {
-  console.log("동물이 소리를 냅니다.");
-};
-
-function Dog() {}
-
-// Animal의 프로토타입을 Dog의 프로토타입으로 상속
-Dog.prototype = Object.create(Animal.prototype);
-Dog.prototype.constructor = Dog; // constructor 복구
-
-Dog.prototype.bark = function() {
-  console.log("멍멍!");
-};
-
-const dog = new Dog();
-
-dog.speak(); // "동물이 소리를 냅니다." (Animal에서 상속)
-dog.bark();  // "멍멍!" (Dog에서 추가)
-console.log(dog instanceof Animal); // true
-console.log(dog instanceof Dog);    // true
-```
-
-✔️ **생성자를 사용하여 여러 개의 인스턴스를 쉽게 생성할 수 있다.**  
-✔️ **객체 생성 시 초기화가 가능하며(**`new Dog()`), `prototype`을 활용하여 메서드를 공유할 수 있다.
-
-❌ **하지만 코드가** `Object.create()` 방식보다 길고 복잡하다.  
-❌ `prototype`을 직접 조작해야 하므로 가독성이 떨어질 수 있다.
-
-📌 **결론:** 생성자 함수 방식은 **ES5 환경에서 클래스를 사용할 수 없을 때 유용하다.**
-
----
-
-3️⃣ `class extends`를 사용한 상속 (ES6 방식)
-
-📌 **ES6 이후** `class` 문법을 사용하여 직관적으로 상속을 구현하는 방식
+ES6부터는 `class` 문법이 추가되면서 더 직관적으로 상속을 구현할 수 있다.
 
 ```javascript
-class Animal {
-  speak() {
-    console.log("동물이 소리를 냅니다.");
+// 1️⃣ 부모 클래스 정의
+class Parent {
+  constructor(name) {
+    this.name = name;
+  }
+
+  sayHello() {
+    return `Hello, I am ${this.name}`;
   }
 }
 
-class Dog extends Animal {
-  bark() {
-    console.log("멍멍!");
+// 2️⃣ 자식 클래스 정의 (extends 키워드 사용)
+class Child extends Parent {
+  constructor(name, age) {
+    super(name); // 부모 생성자 호출
+    this.age = age;
+  }
+
+  sayAge() {
+    return `I am ${this.age} years old.`;
   }
 }
 
-const dog = new Dog();
+// 3️⃣ 객체 생성
+const child = new Child("John", 25);
 
-dog.speak(); // "동물이 소리를 냅니다." (Animal에서 상속)
-dog.bark();  // "멍멍!" (Dog에서 추가)
-console.log(dog instanceof Animal); // true
-console.log(dog instanceof Dog);    // true
+console.log(child.sayHello()); // "Hello, I am John" (부모 클래스에서 상속)
+console.log(child.sayAge());   // "I am 25 years old." (자식 클래스에 있는 메서드)
+console.log(child.__proto__ === Child.prototype); // true
+console.log(Child.prototype.__proto__ === Parent.prototype); // true (프로토타입 체인)
+console.log(Parent.prototype.__proto__ === Object.prototype); // true (최종 원형)
 ```
 
-✔️ **가독성이 좋고 직관적인 코드(**`class` 문법 사용)  
-✔️ `extends` 키워드를 사용하여 상속을 쉽게 구현 가능  
-✔️ **객체 생성 시 속성을 초기화할 수 있음 (**`constructor` 활용 가능)
+✔ `extends`를 사용하면 `Parent`의 기능을 `Child`가 자동으로 상속받는다.
 
-❌ **ES6(2015년) 이후 환경에서만 사용할 수 있다.**  
-❌ **내부적으로는 여전히** `prototype`을 사용하지만, 초보자가 이해하기 어려울 수 있다.
+✔ `super(name)`을 호출해서 부모 클래스의 생성자를 실행(ES5의 [`Parent.call`](http://Parent.call)`(this, name);`와 동일한 역할). 즉, **부모 클래스의 생성자를 호출하여 부모의 속성을 상속**하는 역할을 한다.
 
-📌 **결론:** `class extends`는 **최신 자바스크립트 환경에서 가장 추천되는 방법!** 🚀
+✔ 프로토타입 체인은 `Child.prototype → Parent.prototype → Object.prototype` 순서로 이어진다.
+
+✔ `class`는 문법적으로 더 직관적으로 보이지만, 내부적으로는 여전히 프로토타입을 기반으로 동작한다.
 
 ---
 
-### 5\. 프로토타입 체인(Prototype Chain)이란?
+## **✅ 결론: 프로토타입 상속 방식 비교**
 
-자바스크립트에서 객체는 **자신에게 없는 속성이나 메서드를 프로토타입에서 찾습니다.**
+| 방법 | 사용 문법 | 특징 |
+| --- | --- | --- |
+| **ES5 이전** | `function` + `new` | 생성자 함수를 사용해 직접 프로토타입을 설정해야 함 |
+| **ES5** | `Object.create()` | 더 간결하고, `new` 없이도 원형 객체를 쉽게 설정 가능 |
+| **ES6 이후** | `class` + `extends` | 클래스 문법을 통해 직관적인 상속 구현 가능 |
 
-📌 **예제**
-
-```javascript
-function Animal() {}
-Animal.prototype.speak = function() { console.log("동물이 소리를 냅니다."); };
-
-function Dog() {}
-Dog.prototype = Object.create(Animal.prototype); // Animal을 상속
-
-const dog = new Dog();
-dog.speak(); // "동물이 소리를 냅니다." (Animal의 메서드를 상속)
-```
-
-📌 **이 과정이 일어나는 순서** 1️⃣ `dog` 객체에서 `speak()` 메서드를 찾음 → 없음 ❌  
-2️⃣ `dog.__proto__`(즉, `Dog.prototype`)에서 찾음 → 없음 ❌  
-3️⃣ `Dog.prototype.__proto__`(즉, `Animal.prototype`)에서 찾음 → ✅ 발견! 실행 🎉
-
-✔️ **이렇게 객체가 상위 객체를 따라가며 속성을 찾는 과정을 "프로토타입 체인"이라고 합니다!** 🚀
+🚀 **즉, 자바스크립트의 프로토타입 상속 방식은 발전하면서 점점 더 쉽고 직관적으로 변해왔다!** 🎯
